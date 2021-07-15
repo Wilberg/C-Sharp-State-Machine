@@ -5,36 +5,64 @@ namespace States.Machine
 {
     public sealed class StateMachineBuilder<T> where T : StateMachine, new()
     {
-        private readonly Dictionary<Type, Transition> _transitions = new Dictionary<Type, Transition>();
-        
-        public StateMachineBuilder<T> RegisterTransition<TState>(Func<bool> condition) where TState : IState, new()
+        private readonly Dictionary<Type, IState> _states = new Dictionary<Type, IState>();
+        private readonly List<Transition> _transitions = new List<Transition>();
+        private readonly List<AnyTransition> _anyTransition = new List<AnyTransition>();
+        private IState _initialState;
+
+        public StateMachineBuilder<T> RegisterState(IState state)
         {
-            _transitions[typeof(TState)] = new Transition
+            _states[state.GetType()] = state;
+            
+            return this;
+        }
+
+        public StateMachineBuilder<T> RegisterTransition<TFrom, TTo>(Func<bool> condition)
+        {
+            var from = _states[typeof(TFrom)];
+            var to = _states[typeof(TTo)];
+            
+            _transitions.Add(new Transition
             {
-                Condition = condition,
-                State = new TState()
-            };
+                From = from,
+                To = to,
+                Condition = condition
+            });
 
             return this;
         }
 
-        public StateMachineBuilder<T> RegisterTransition(IState state, Func<bool> condition)
+        public StateMachineBuilder<T> RegisterAnyTransition<TState>(Func<bool> condition)
         {
-            _transitions[state.GetType()] = new Transition
+            var state = _states[typeof(TState)];
+            
+            _anyTransition.Add(new AnyTransition
             {
-                Condition = condition,
-                State = state
-            };
+                State = state,
+                Condition = condition
+            });
+
+            return this;
+        }
+
+        public StateMachineBuilder<T> SetInitialState<TState>()
+        {
+            _initialState = _states[typeof(TState)];
 
             return this;
         }
         
         public T Build()
         {
-            return new T
+            var machine = new T
             {
-                Transitions = _transitions
+                Transitions = _transitions,
+                AnyTransitions = _anyTransition
             };
+            
+            machine.SetState(_initialState);
+
+            return machine;
         }
     }
 }

@@ -20,5 +20,10 @@ namespace Movement.States
         {
             Debug.Log("Entered Idle");
         }
+
+        public override void OnExit()
+        {
+            Debug.Log("Exited Idle");
+        }
     }
 }

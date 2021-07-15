@@ -15,5 +15,15 @@ namespace Movement.States
                 Movement.rigidbody.velocity += Vector3.down * 5.0f;
             }
         }
+
+        public override void OnEnter()
+        {
+            Debug.Log("Entered Jumping");
+        }
+
+        public override void OnExit()
+        {
+            Debug.Log("Exited Jumping");
+        }
     }
 }

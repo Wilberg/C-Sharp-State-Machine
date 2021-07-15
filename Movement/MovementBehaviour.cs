@@ -14,9 +14,13 @@ namespace Movement
         private void Start()
         {
             _machine = MovementStateMachine.Builder()
-                .RegisterTransition(new IdleState(this), IsIdle)
-                .RegisterTransition(new JumpingState(this), IsJumping)
-                .RegisterTransition(new FallingState(this), IsFalling)
+                .RegisterState(new IdleState(this))
+                .RegisterState(new FallingState(this))
+                .RegisterState(new JumpingState(this))
+                .SetInitialState<IdleState>()
+                    .RegisterTransition<IdleState, JumpingState>(IsJumping)
+                    .RegisterTransition<FallingState, IdleState>(IsIdle)
+                    .RegisterAnyTransition<FallingState>(IsFalling)
                 .Build();
         }
 
@@ -27,7 +31,6 @@ namespace Movement
 
         private void FixedUpdate()
         {
-            _machine.FixedUpdate();
         }
 
         private void OnCollisionEnter(Collision other)

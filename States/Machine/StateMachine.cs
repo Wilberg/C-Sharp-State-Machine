@@ -6,8 +6,9 @@ namespace States.Machine
 {
     public class StateMachine
     {
-        public Dictionary<Type, Transition> Transitions;
-        protected Transition Active;
+        public List<Transition> Transitions;
+        public List<AnyTransition> AnyTransitions;
+        public IState CurrentState;
         
         public static StateMachineBuilder<StateMachine> Builder()
         {
@@ -16,17 +17,29 @@ namespace States.Machine
 
         public virtual void Update()
         {
-            var active = Transitions
-                .Select(pair => pair.Value)
-                .FirstOrDefault(transition => transition.Condition.Invoke());
+            var activeAnyTransition = AnyTransitions.FirstOrDefault(transition => transition.Condition.Invoke());
+            if (!(activeAnyTransition is null))
+            {
+                if (activeAnyTransition.State != CurrentState) SetState(activeAnyTransition.State);
+                return;
+            }
 
-            if (active is null) return;
+            var activeTransition = Transitions
+                .FirstOrDefault(transition => transition.From == CurrentState && transition.Condition.Invoke());
 
-            if (Active != active) Active?.State.OnExit();
-            else return;
+            if (activeTransition is null || activeTransition.To == CurrentState) return;
+
+            SetState(activeTransition.To);
+        }
+
+        public void SetState(IState state)
+        {
+            if (state is null) return;
             
-            Active = active;
-            Active.State.OnEnter();
+            CurrentState?.OnExit();
+            
+            CurrentState = state;
+            CurrentState.OnEnter();
         }
     }
 }
