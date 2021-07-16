@@ -4,6 +4,8 @@ namespace Movement.States
 {
     public class JumpingState : MovementState
     {
+        private int _jumps = 0;
+        
         public JumpingState(MovementBehaviour movement) : base(movement)
         {
         }
@@ -12,7 +14,11 @@ namespace Movement.States
         {
             if (action == MovementAction.Jump)
             {
-                Movement.rigidbody.velocity += Vector3.down * 5.0f;
+                _jumps++;
+                if (_jumps <= 1)
+                {
+                    Movement.rigidbody.velocity += Vector3.up * 10.0f;   
+                }
             }
         }
 
@@ -23,6 +29,7 @@ namespace Movement.States
 
         public override void OnExit()
         {
+            _jumps = 0;
             Debug.Log("Exited Jumping");
         }
     }

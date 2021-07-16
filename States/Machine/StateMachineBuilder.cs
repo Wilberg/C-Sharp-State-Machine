@@ -6,26 +6,34 @@ namespace States.Machine
     public sealed class StateMachineBuilder<T> where T : StateMachine, new()
     {
         private readonly Dictionary<Type, IState> _states = new Dictionary<Type, IState>();
-        private readonly List<Transition> _transitions = new List<Transition>();
-        private readonly List<AnyTransition> _anyTransition = new List<AnyTransition>();
+        private readonly Dictionary<Type, List<Transition>> _transitions = new Dictionary<Type, List<Transition>>();
+        private readonly List<Transition> _anyTransition = new List<Transition>();
         private IState _initialState;
 
         public StateMachineBuilder<T> RegisterState(IState state)
         {
-            _states[state.GetType()] = state;
+            var type = state.GetType();
+            
+            _states[type] = state;
+            _transitions[type] = new List<Transition>();
             
             return this;
         }
 
         public StateMachineBuilder<T> RegisterTransition<TFrom, TTo>(Func<bool> condition)
         {
-            var from = _states[typeof(TFrom)];
-            var to = _states[typeof(TTo)];
-            
-            _transitions.Add(new Transition
+            var state = _states[typeof(TTo)];
+
+            if (!_transitions.ContainsKey(typeof(TFrom)))
             {
-                From = from,
-                To = to,
+                // Todo: Throw warning.
+                return this;
+            }
+
+
+            _transitions[typeof(TFrom)].Add(new Transition
+            {
+                State = state,
                 Condition = condition
             });
 
@@ -36,7 +44,7 @@ namespace States.Machine
         {
             var state = _states[typeof(TState)];
             
-            _anyTransition.Add(new AnyTransition
+            _anyTransition.Add(new Transition
             {
                 State = state,
                 Condition = condition

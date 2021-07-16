@@ -6,8 +6,8 @@ namespace States.Machine
 {
     public class StateMachine
     {
-        public List<Transition> Transitions;
-        public List<AnyTransition> AnyTransitions;
+        public Dictionary<Type, List<Transition>> Transitions;
+        public List<Transition> AnyTransitions;
         public IState CurrentState;
         
         public static StateMachineBuilder<StateMachine> Builder()
@@ -17,29 +17,38 @@ namespace States.Machine
 
         public virtual void Update()
         {
-            var activeAnyTransition = AnyTransitions.FirstOrDefault(transition => transition.Condition.Invoke());
-            if (!(activeAnyTransition is null))
-            {
-                if (activeAnyTransition.State != CurrentState) SetState(activeAnyTransition.State);
-                return;
-            }
-
-            var activeTransition = Transitions
-                .FirstOrDefault(transition => transition.From == CurrentState && transition.Condition.Invoke());
-
-            if (activeTransition is null || activeTransition.To == CurrentState) return;
-
-            SetState(activeTransition.To);
+            var transition = GetActiveTransition();
+            if (transition is null || transition.State == CurrentState) return;
+            
+            SetState(transition.State);
         }
 
         public void SetState(IState state)
         {
-            if (state is null) return;
+            if (state is null || state == CurrentState) return;
             
             CurrentState?.OnExit();
             
             CurrentState = state;
             CurrentState.OnEnter();
+        }
+
+        private Transition GetActiveTransition()
+        {
+            foreach (var transition in AnyTransitions)
+            {
+                if (transition.Condition.Invoke()) return transition;
+            }
+
+            var key = CurrentState.GetType();
+            if (!Transitions.ContainsKey(key)) return default;
+            
+            foreach (var transition in Transitions[key])
+            {
+                if (transition.Condition.Invoke()) return transition;
+            }
+
+            return default;
         }
     }
 }

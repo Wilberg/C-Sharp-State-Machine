@@ -4,8 +4,7 @@ namespace States
 {
     public sealed class Transition
     {
-        public IState From;
-        public IState To;
+        public IState State;
         public Func<bool> Condition;
     }
 }

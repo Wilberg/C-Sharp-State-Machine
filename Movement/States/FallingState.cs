@@ -13,7 +13,7 @@ namespace Movement.States
         {
             if (action == MovementAction.Jump)
             {
-                Movement.rigidbody.velocity += Vector3.right;
+                Movement.rigidbody.velocity += Vector3.down * 10.0f;
             }
         }
 
