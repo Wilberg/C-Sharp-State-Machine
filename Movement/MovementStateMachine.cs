@@ -4,15 +4,14 @@ namespace Movement
 {
     public class MovementStateMachine : StateMachine
     {
-        public new static StateMachineBuilder<MovementStateMachine> Builder()
-        {
-            return new StateMachineBuilder<MovementStateMachine>();
-        }
-
         public void Action(MovementAction action)
         {
-            var state = CurrentState as MovementState;
-            state?.OnAction(action);
+            (CurrentState as MovementState)?.OnAction(action);
+        }
+
+        public void FixedUpdate()
+        {
+            (CurrentState as MovementState)?.OnFixedUpdate();
         }
     }
 }

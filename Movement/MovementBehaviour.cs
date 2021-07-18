@@ -1,4 +1,5 @@
 using Movement.States;
+using States.Machine;
 using UnityEngine;
 
 namespace Movement
@@ -6,6 +7,8 @@ namespace Movement
     public class MovementBehaviour : MonoBehaviour
     {
         public new Rigidbody rigidbody;
+        public float strength;
+        public float dampening;
         
         private MovementStateMachine _machine;
      
@@ -13,15 +16,16 @@ namespace Movement
         
         private void Start()
         {
-            _machine = MovementStateMachine.Builder()
+            var builder = StateMachine.Builder()
                 .RegisterState(new IdleState(this))
                 .RegisterState(new FallingState(this))
                 .RegisterState(new JumpingState(this))
                 .SetInitialState<IdleState>()
-                    .RegisterTransition<IdleState, JumpingState>(IsJumping)
-                    .RegisterTransition<FallingState, IdleState>(IsIdle)
-                    .RegisterAnyTransition<FallingState>(IsFalling)
-                .Build();
+                .RegisterTransition<IdleState, JumpingState>(IsJumping)
+                .RegisterTransition<FallingState, IdleState>(IsIdle)
+                .RegisterAnyTransition<FallingState>(IsFalling);
+
+            _machine = builder.Build<MovementStateMachine>();
         }
 
         private void Update()
@@ -31,6 +35,9 @@ namespace Movement
 
         private void FixedUpdate()
         {
+            _machine.FixedUpdate();
+
+            SnapToGround();
         }
 
         private void OnCollisionEnter(Collision other)
@@ -56,6 +63,25 @@ namespace Movement
         public void Crouch()
         {
             _machine.Action(MovementAction.Crouch);
+        }
+
+        private void SnapToGround()
+        {
+            var ray = new Ray(transform.position, Vector3.down);
+
+            var padding = 1.5f;
+            
+            Debug.DrawRay(ray.origin, ray.direction * padding, Color.blue);
+            Debug.DrawRay(ray.origin + ray.direction * padding, ray.direction * padding / 2, Color.red);
+            
+            if (!Physics.Raycast(ray, out var hit, padding + padding / 2)) return;
+
+            var distance = hit.distance;
+
+            var spring = (distance - padding) * strength;
+            var damp = Vector3.Dot(rigidbody.velocity, Vector3.down) * dampening;
+
+            rigidbody.velocity += Vector3.up * ((spring - damp) * Time.deltaTime);
         }
 
         private bool IsIdle()

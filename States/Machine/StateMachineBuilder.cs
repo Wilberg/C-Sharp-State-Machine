@@ -3,14 +3,14 @@ using System.Collections.Generic;
 
 namespace States.Machine
 {
-    public sealed class StateMachineBuilder<T> where T : StateMachine, new()
+    public sealed class StateMachineBuilder
     {
         private readonly Dictionary<Type, IState> _states = new Dictionary<Type, IState>();
         private readonly Dictionary<Type, List<Transition>> _transitions = new Dictionary<Type, List<Transition>>();
         private readonly List<Transition> _anyTransition = new List<Transition>();
         private IState _initialState;
 
-        public StateMachineBuilder<T> RegisterState(IState state)
+        public StateMachineBuilder RegisterState(IState state)
         {
             var type = state.GetType();
             
@@ -20,7 +20,7 @@ namespace States.Machine
             return this;
         }
 
-        public StateMachineBuilder<T> RegisterTransition<TFrom, TTo>(Func<bool> condition)
+        public StateMachineBuilder RegisterTransition<TFrom, TTo>(Func<bool> condition)
         {
             var state = _states[typeof(TTo)];
 
@@ -40,7 +40,7 @@ namespace States.Machine
             return this;
         }
 
-        public StateMachineBuilder<T> RegisterAnyTransition<TState>(Func<bool> condition)
+        public StateMachineBuilder RegisterAnyTransition<TState>(Func<bool> condition)
         {
             var state = _states[typeof(TState)];
             
@@ -53,14 +53,14 @@ namespace States.Machine
             return this;
         }
 
-        public StateMachineBuilder<T> SetInitialState<TState>()
+        public StateMachineBuilder SetInitialState<TState>()
         {
             _initialState = _states[typeof(TState)];
 
             return this;
         }
         
-        public T Build()
+        public T Build<T>() where T : StateMachine, new()
         {
             var machine = new T
             {

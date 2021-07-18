@@ -10,9 +10,9 @@ namespace States.Machine
         public List<Transition> AnyTransitions;
         public IState CurrentState;
         
-        public static StateMachineBuilder<StateMachine> Builder()
+        public static StateMachineBuilder Builder()
         {
-            return new StateMachineBuilder<StateMachine>();
+            return new StateMachineBuilder();
         }
 
         public virtual void Update()
